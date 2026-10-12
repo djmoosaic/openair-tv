@@ -1,0 +1,19 @@
+{
+  "name": "openair-tv",
+  "version": "1.0.0",
+  "description": "Free live TV web app and Android app",
+  "scripts": {
+    "serve": "npx serve www",
+    "sync": "npx cap sync android",
+    "open:android": "npx cap open android"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@capacitor/android": "^8.5.3",
+    "@capacitor/cli": "^8.5.3",
+    "@capacitor/core": "^8.5.3",
+    "hls.js": "^1.7.3"
+  }
+}

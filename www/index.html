@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#070b12" />
+  <title>OpenAir TV · Free Live TV</title>
+  <meta name="description" content="Watch thousands of free live TV channels from around the world: news, sports, movies, music and more. No sign-up, works on phone and computer." />
+  <link rel="canonical" href="https://openairtv.uk/" />
+
+  <!-- Sharing preview (WhatsApp, Facebook, X, etc.) -->
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="OpenAir TV" />
+  <meta property="og:title" content="OpenAir TV · Free Live TV" />
+  <meta property="og:description" content="Watch thousands of free live TV channels from around the world: news, sports, movies, music and more. No sign-up, works on phone and computer." />
+  <meta property="og:url" content="https://openairtv.uk/" />
+  <meta property="og:image" content="https://openairtv.uk/og-image.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta name="twitter:card" content="summary_large_image" />
+
+  <!-- Installable app -->
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" href="icon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="OpenAir TV" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app" id="app">
+    <!-- Sidebar: search, categories, channel list -->
+    <aside class="sidebar" id="sidebar">
+      <div class="brand">
+        <svg width="20" height="20" class="brand-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 11L8.5 21M12 11l3.5 10M9.7 18h4.6"/><circle cx="12" cy="9.5" r="1.6" class="fill"/><path d="M15.1 6.9a4 4 0 0 1 0 5.2M8.9 6.9a4 4 0 0 0 0 5.2M17.4 5a7 7 0 0 1 0 9M6.6 5a7 7 0 0 0 0 9"/></svg>
+        <span class="brand-name" id="brandName">OpenAir TV</span>
+        <span class="brand-tag">Free Live TV</span>
+      </div>
+
+      <div class="search">
+        <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+        <input id="search" type="search" placeholder="Search channels…" autocomplete="off" />
+      </div>
+
+      <div class="chips-wrap" id="chipsWrap">
+        <button class="chip-arrow left" id="chipsLeft" aria-label="Scroll categories left" tabindex="-1">
+          <svg width="16" height="16" viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg>
+        </button>
+        <div class="chips" id="chips" role="tablist" aria-label="Categories"></div>
+        <button class="chip-arrow right" id="chipsRight" aria-label="Scroll categories right" tabindex="-1">
+          <svg width="16" height="16" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>
+        </button>
+      </div>
+
+      <div class="list-meta"><span id="count">Loading channels…</span></div>
+
+      <ul class="channel-list" id="list" aria-label="Channels"></ul>
+
+      <footer class="side-foot">
+        <div class="foot-actions">
+          <button class="foot-btn" id="installBtn" hidden>
+            <svg width="16" height="16" viewBox="0 0 24 24"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>
+            Install app
+          </button>
+          <a class="foot-btn" id="apkBtn" hidden>
+            <svg width="16" height="16" viewBox="0 0 24 24"><rect x="6" y="2.5" width="12" height="19" rx="2.5"/><path d="M11 18.5h2"/></svg>
+            Android app
+          </a>
+        </div>
+        <nav class="foot-links">
+          <a href="about.html">About</a>
+          <a href="privacy.html">Privacy</a>
+          <a href="disclaimer.html">Disclaimer</a>
+        </nav>
+        <span>Made by <strong>DJ Moosaic</strong></span>
+      </footer>
+    </aside>
+
+    <!-- Main: header + player -->
+    <main class="main">
+      <header class="topbar">
+        <button class="icon-btn" id="menuBtn" aria-label="Toggle channel list">
+          <svg width="20" height="20" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+        </button>
+        <div class="now" id="now">
+          <img id="nowLogo" alt="" hidden />
+          <span id="nowName">Pick a channel</span>
+        </div>
+        <button class="icon-btn fav-btn" id="favBtn" aria-label="Add to favourites" hidden>
+          <svg width="20" height="20" viewBox="0 0 24 24"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg>
+        </button>
+      </header>
+
+      <section class="stage">
+        <div class="player" id="player">
+          <video id="video" controls playsinline autoplay></video>
+          <div class="overlay" id="overlay">
+            <div class="welcome" id="welcome">
+              <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 11L8.5 21M12 11l3.5 10M9.7 18h4.6"/><circle cx="12" cy="9.5" r="1.6" class="fill"/><path d="M15.1 6.9a4 4 0 0 1 0 5.2M8.9 6.9a4 4 0 0 0 0 5.2M17.4 5a7 7 0 0 1 0 9M6.6 5a7 7 0 0 0 0 9"/></svg>
+              <h1>Free live TV from around the world</h1>
+              <p>Choose a channel from the list to start watching.</p>
+            </div>
+            <div class="spinner" id="spinner" hidden></div>
+            <div class="error" id="error" hidden>
+              <strong>This stream isn't available right now</strong>
+              <span id="errorText">It may be offline, geo-blocked, or not allow web playback.</span>
+              <button id="retryBtn" class="pill">Try again</button>
+            </div>
+          </div>
+        </div>
+        <div class="details" id="details" hidden>
+          <div class="badges" id="badges"></div>
+          <div class="alt" id="alt"></div>
+        </div>
+      </section>
+    </main>
+    <div class="scrim" id="scrim"></div>
+  </div>
+
+  <script src="vendor/hls.min.js"></script>
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+  <script>
+    if (!window.OpenAirTV) {
+      document.body.innerHTML = '<p style="font:16px system-ui;padding:24px;max-width:560px">'
+        + 'Some of the app\'s files are missing. If you opened this from inside a .zip file, '
+        + 'right-click the zip, choose <b>Extract All</b>, then open <b>www/index.html</b> from the extracted folder.</p>';
+    }
+  </script>
+</body>
+</html>

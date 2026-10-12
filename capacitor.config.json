@@ -1,0 +1,13 @@
+{
+  "appId": "com.openairtv.app",
+  "appName": "OpenAir TV",
+  "webDir": "www",
+  "server": {
+    "androidScheme": "http",
+    "cleartext": true
+  },
+  "android": {
+    "allowMixedContent": true,
+    "backgroundColor": "#070b12"
+  }
+}
