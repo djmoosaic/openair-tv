@@ -486,7 +486,18 @@
   let searchTimer;
   el.search.addEventListener("input", () => {
     clearTimeout(searchTimer);
-    searchTimer = setTimeout(() => { state.query = el.search.value.trim(); applyFilter(); el.list.scrollTop = 0; }, 150);
+    searchTimer = setTimeout(() => {
+      state.query = el.search.value.trim();
+      // Searching always looks through every channel
+      if (state.query && state.category !== "All") {
+        state.category = "All";
+        for (const x of el.chips.children) x.setAttribute("aria-selected", String(x.textContent === "All"));
+        el.chips.scrollLeft = 0;
+        syncUrl();
+      }
+      applyFilter();
+      el.list.scrollTop = 0;
+    }, 150);
   });
   document.addEventListener("keydown", (e) => {
     if (e.key === "/" && document.activeElement !== el.search) { e.preventDefault(); el.search.focus(); }
@@ -494,7 +505,7 @@
   el.menuBtn.onclick = () => el.app.classList.toggle("collapsed");
 
   // TV remotes: after picking a channel, move focus to the player; OK toggles play/pause.
-  el.video.tabIndex = 0;
+  el.video.tabIndex = NativePlayer ? -1 : 0; // in the app, video plays in the native player instead
   el.video.addEventListener("keydown", (e) => {
     if (e.key === "Enter" || e.key === " " || e.key === "MediaPlayPause") {
       e.preventDefault();
@@ -532,6 +543,86 @@
   // Offline-ready shell on the real website only (not in the Android app or local files)
   if ("serviceWorker" in navigator && location.protocol === "https:" && !isNativeApp) {
     window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
+  }
+
+  // ───────────────── TV remote (D-pad) navigation ─────────────────
+  // Fire TV / Android TV: arrow keys move to the nearest item in that direction.
+  const isTV = !!NativePlayer || /AFT|Android TV|GoogleTV|BRAVIA|SMART-TV|SmartTV|Tizen|Web0S|Silk/i.test(navigator.userAgent);
+  const FOCUSABLE = "button:not([hidden]):not([disabled]), a[href], input, video[tabindex]";
+
+  function visibleTarget(n) {
+    if (n.hidden || n.closest("[hidden]") || n.tabIndex < 0) return false;
+    const r = n.getBoundingClientRect();
+    if (r.width === 0 || r.height === 0) return false;
+    // Must sit inside the screen area vertically/horizontally of its scroll area (items just off-edge are fine)
+    return getComputedStyle(n).visibility !== "hidden";
+  }
+
+  function moveFocus(dir) {
+    const cur = document.activeElement && document.activeElement !== document.body ? document.activeElement : null;
+    const all = [...document.querySelectorAll(FOCUSABLE)].filter((n) => n !== cur && visibleTarget(n));
+    if (!cur) { const first = el.list.querySelector(".ch.active") || el.list.querySelector(".ch") || all[0]; if (first) focusEl(first); return; }
+    const a = cur.getBoundingClientRect();
+    const ax = a.left + a.width / 2, ay = a.top + a.height / 2;
+    let best = null, bestScore = Infinity;
+    for (const n of all) {
+      const b = n.getBoundingClientRect();
+      const bx = b.left + b.width / 2, by = b.top + b.height / 2;
+      let main, cross;
+      if (dir === "ArrowRight") { if (bx <= ax + 4) continue; main = Math.max(0, b.left - a.right); cross = Math.abs(by - ay); }
+      else if (dir === "ArrowLeft") { if (bx >= ax - 4) continue; main = Math.max(0, a.left - b.right); cross = Math.abs(by - ay); }
+      else if (dir === "ArrowDown") { if (by <= ay + 4) continue; main = Math.max(0, b.top - a.bottom); cross = Math.abs(bx - ax); }
+      else { if (by >= ay - 4) continue; main = Math.max(0, a.top - b.bottom); cross = Math.abs(bx - ax); }
+      // Prefer items in the same row/column: overlap on the cross axis counts as perfectly aligned
+      const overlap = (dir === "ArrowLeft" || dir === "ArrowRight")
+        ? Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top)
+        : Math.min(a.right, b.right) - Math.max(a.left, b.left);
+      if (overlap > 0) cross = 0;
+      // Left/Right only move along the same row (so Right from the channel list doesn't jump up to the categories)
+      if ((dir === "ArrowLeft" || dir === "ArrowRight") && overlap <= 0 && cross > a.height) continue;
+      const score = main + cross * 3;
+      if (score < bestScore) { bestScore = score; best = n; }
+    }
+    if (best) focusEl(best);
+  }
+
+  function focusEl(n) {
+    n.focus({ preventScroll: true });
+    n.scrollIntoView({ block: "nearest", inline: "nearest" });
+    if (n.classList.contains("chip")) updateChipArrows();
+  }
+
+  if (isTV) {
+    document.documentElement.classList.add("tv");
+    document.addEventListener("keydown", (e) => {
+      if (e.defaultPrevented || !/^Arrow/.test(e.key)) return;
+      const t = document.activeElement;
+      // In the search box, Left/Right move the cursor until it reaches the start/end of the text
+      if (t === el.search) {
+        const atStart = t.selectionStart === 0 && t.selectionEnd === 0;
+        const atEnd = t.selectionStart === t.value.length;
+        if ((e.key === "ArrowLeft" && !atStart) || (e.key === "ArrowRight" && !atEnd)) return;
+      }
+      e.preventDefault();
+      moveFocus(e.key);
+    });
+    // OK / Enter on the search box after typing: show results and jump to the first channel
+    el.search.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        el.search.dispatchEvent(new Event("input"));
+        setTimeout(() => {
+          const first = el.list.querySelector(".ch");
+          if (first) focusEl(first); // otherwise stay in the search box ("No channels match")
+        }, 200);
+      }
+    });
+    // Start with the remote on the channel list
+    const waitForList = setInterval(() => {
+      const first = el.list.querySelector(".ch.active") || el.list.querySelector(".ch");
+      if (first) { clearInterval(waitForList); if (!document.activeElement || document.activeElement === document.body) focusEl(first); }
+    }, 300);
+    setTimeout(() => clearInterval(waitForList), 20000);
   }
 
   // Expose for tests / debugging
