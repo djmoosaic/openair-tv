@@ -29,7 +29,7 @@ window.APP_CONFIG = {
 
   // Link to your Android app (.apk) download. Leave "" to hide the button.
   // Example: "https://github.com/YOUR-NAME/openair-tv/releases/latest/download/OpenAirTV.apk"
-  androidAppUrl: "",
+  androidAppUrl: "https://openairtv.uk/apk",
 
   // How long to wait for a stream before showing an error (ms)
   loadTimeout: 15000,

@@ -30,8 +30,8 @@ To update the site later: change files in `www`, then in the Pages project click
 2. Upload everything in this folder (including the hidden `.github` folder — GitHub Desktop is easiest).
 3. Open the **Actions** tab and wait for **Build Android APK** (about 5 minutes).
    The APK appears under **Releases → Latest APK → OpenAirTV.apk**.
-4. Copy that file's download link into `www/config.js` → `androidAppUrl`, and upload the website again.
-   An **Android app** button then appears on the site.
+4. The website already links to it: **openairtv.uk/apk** always downloads the latest APK
+   (set in `www/_redirects`). On a Fire Stick, type `openairtv.uk/apk` into the Downloader app.
 
 ## Make it yours
 | What | Where |

@@ -21,6 +21,16 @@
     brandName: $("brandName"),
   };
 
+  // Inside the Android / Fire TV app, play video with Android's native player (hardware decoding)
+  const NativePlayer = (() => {
+    const C = window.Capacitor;
+    try {
+      if (!C || !C.isNativePlatform || !C.isNativePlatform()) return null;
+      return C.registerPlugin ? C.registerPlugin("NativePlayer") : (C.Plugins && C.Plugins.NativePlayer) || null;
+    } catch { return null; }
+  })();
+  let nativeBroken = false;
+
   const PAGE = 120;          // rows rendered per batch
   const FAV_KEY = "openair.favourites";
   const LAST_KEY = "openair.last";
@@ -297,7 +307,7 @@
     b.onclick = (ev) => {
       play(ch);
       // Keyboard / remote users (detail === 0): jump to the player so OK pauses, Left comes back
-      if (ev.detail === 0 && matchMedia("(min-width: 861px)").matches) el.video.focus();
+      if (!NativePlayer && ev.detail === 0 && matchMedia("(min-width: 861px)").matches) el.video.focus();
     };
     li.append(b);
     return li;
@@ -324,7 +334,7 @@
     el.video.load();
   }
 
-  function play(ch, index = 0, isFallback = false) {
+  function play(ch, index = 0, isFallback = false, autoStart = true) {
     stop();
     state.current = ch;
     state.streamIndex = index;
@@ -341,6 +351,18 @@
     syncUrl();
     writeJSON(LAST_KEY, ch.id);
     document.title = `${ch.name} · ${CFG.appName}`;
+
+    if (NativePlayer && !nativeBroken) {
+      setWelcome("Press OK to watch " + ch.name, "Plays full screen. Press Back on your remote to return to the channel list.");
+      show("welcome");
+      if (!autoStart) return;
+      const ordered = ch.streams.slice(index).concat(ch.streams.slice(0, index)).map((s) => s.url);
+      NativePlayer.play({ urls: ordered, title: ch.name }).catch(() => {
+        nativeBroken = true; // native player unavailable: fall back to the web player
+        play(ch, index, isFallback, true);
+      });
+      return;
+    }
 
     if (isSecurePage && stream.url.startsWith("http:")) {
       return fail("This channel uses an insecure (http) link, which browsers block on secure websites. It plays in the Android app.");
@@ -366,6 +388,12 @@
       v.src = stream.url;
       tryPlay();
     }
+  }
+
+  function setWelcome(title, text) {
+    const h = el.welcome.querySelector("h1"), p = el.welcome.querySelector("p");
+    if (h) h.textContent = title;
+    if (p) p.textContent = text;
   }
 
   function tryPlay() {
@@ -447,7 +475,7 @@
     const id = p.get("channel") || readJSON(LAST_KEY, null);
     const ch = id && state.byId.get(id);
     if (ch) {
-      play(ch);
+      play(ch, 0, false, !NativePlayer); // in the app, don't jump straight into full screen on launch
       const b = el.list.querySelector(`.ch[data-id="${CSS.escape(ch.id)}"]`);
       if (b && b.scrollIntoView) b.scrollIntoView({ block: "center" });
     } else {
